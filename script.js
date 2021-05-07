@@ -34,18 +34,17 @@ function operate (operator, a, b) {
 }
 
 
-
-
 let displayValue;
 let opResult;
 let a;
 let b;
+let previousOpRresult;
 let display = document.querySelector(".screen");
 let calcButtons = document.querySelectorAll(".calcButton");
 let equalButton = document.querySelector("#equal");
 let acButton = document.querySelector("#ac");
 let clearButton = document.querySelector("#clear");
-let operators = ["+", "-", "/", "*"]
+let operators = ["+", "-", "/", "*"];
 
 function endTransition(e) {
     if (e.propertyName === 'transform') {
@@ -62,13 +61,16 @@ calcButtons.forEach( (calcButton) => {
     calcButton.addEventListener('transitionend', endTransition)
 })
 
-//populate the display when clicked
+//populate the display when a button is clicked
 function populateDisplay(calcButton) {
     if(calcButton.hasAttribute("data-num")) {
         let num = calcButton.dataset.num;
-        //if there is an opResult on the screen and the user presss a number    
+        //if there is an operation Result on the screen and the user presss a number
+        // reset all variables and start fresh   
         if(String(opResult) === display.textContent) {
             opResult = undefined;
+            a = undefined;
+            b = undefined;
             displayValue = num;
             display.textContent = displayValue;
         }
@@ -79,7 +81,8 @@ function populateDisplay(calcButton) {
         
     }
     if (calcButton.hasAttribute("data-operator")) {
-        if (displayValue !== undefined) {
+        // if there is already a value on the screen and not an operator
+        if (displayValue !== undefined && Number(displayValue[displayValue.length - 1]))  {
             let currentOperator = calcButton.dataset.operator;
             //Execute the previous operation if there is any
             let previousOp = operators.find( (operator) => {
@@ -88,9 +91,19 @@ function populateDisplay(calcButton) {
                 }
             })
             if(previousOp) {
-                a = Number(displayValue.split(previousOp)[0]);
-                b = Number(displayValue.split(previousOp)[1].split(currentOperator)[0]);
-                let previousOpRresult = operate(previousOp, a ,b);
+
+                if (previousOpRresult < 0 && displayValue.length > String(previousOpRresult).length) {
+                    a = previousOpRresult;
+                    b = Math.abs(Number(displayValue.slice(String(a).length)));
+                    let operator = displayValue.slice(String(a).length).split(b)[0];
+                    previousOpRresult = operate(operator, a ,b);
+                }
+                else {
+                    a = Number(displayValue.split(previousOp)[0]);
+                    b = Number(displayValue.split(previousOp)[1].split(currentOperator)[0]);
+                    previousOpRresult = operate(previousOp, a ,b);
+                }
+
                 displayValue = previousOpRresult + currentOperator;
                 display.textContent = displayValue;
             }
@@ -119,9 +132,13 @@ equalButton.addEventListener('click', function (){
 
 }})
 
-acButton.addEventListener('click', function() {
+clearButton.addEventListener('click', function() {
     if(String(opResult) === display.textContent) {
         displayValue = undefined;
+        opResult = undefined;
+        a = undefined;
+        b = undefined;
+        previousOpRresult = undefined;
         display.textContent = "";
     }
     else {
@@ -130,7 +147,13 @@ acButton.addEventListener('click', function() {
     }
 })
 
-clearButton.addEventListener('click', function() {
+acButton.addEventListener('click', function() {
     displayValue = undefined;
+    opResult = undefined;
+    a = undefined;
+    b = undefined;
+    previousOpRresult = undefined;
     display.textContent = "";
 })
+
+
