@@ -82,7 +82,7 @@ function populateDisplay(calcButton) {
     }
     if (calcButton.hasAttribute("data-operator")) {
         // if there is already a value on the screen and not an operator
-        if (displayValue !== undefined && Number(displayValue[displayValue.length - 1]))  {
+        if (displayValue !== undefined && !operators.includes(displayValue[displayValue.length - 1]))  {
             let currentOperator = calcButton.dataset.operator;
             //Execute the previous operation if there is any
             let previousOp = operators.find( (operator) => {
