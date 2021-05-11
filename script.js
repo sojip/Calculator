@@ -22,6 +22,9 @@ calcButtons.forEach( (calcButton) => {
         calcButton.classList.add('clicked');
         populateDisplay(calcButton)
     })
+})
+
+calcButtons.forEach( (calcButton) => {
     calcButton.addEventListener('transitionend', endTransition)
 })
 
@@ -29,52 +32,41 @@ calcButtons.forEach( (calcButton) => {
 function populateDisplay(calcButton) {
     if(calcButton.hasAttribute("data-num")) {
         let num = calcButton.dataset.num;
-        //if there is an operation Result on the screen and the user presss a number
+        //if there is an operation Result on the screen and the user press a number or if there is error
         // reset all variables and start fresh   
-        if(String(opResult) === display.textContent) {
+        if(display.textContent === String(opResult) || display.textContent === "Error") {
             opResult = undefined;
+            previousOpRresult = undefined;
             a = undefined;
             b = undefined;
             displayValue = num;
-            display.textContent = displayValue;
+            
         }
         else {
             displayValue === undefined ? displayValue = num : displayValue += num;
-            display.textContent = displayValue;
         }
-        
+        display.textContent = displayValue;
     }
-    if (calcButton.hasAttribute("data-operator")) {
-        // if there is already a value on the screen and not an operator
-        if (displayValue !== undefined && !operators.includes(displayValue[displayValue.length - 1]))  {
+    else if (calcButton.hasAttribute("data-operator")) { 
+        // if there is already a value on the screen and if an operator has not been already selected
+        if (displayValue !== undefined && !operators.includes(displayValue[displayValue.length - 1]) && displayValue !== "Error")  {
             let currentOperator = calcButton.dataset.operator;
             //Execute the previous operation if there is any
             let previousOp = operators.find( (operator) => {
-                if (displayValue.includes(operator)) {
+                if (displayValue.slice(1).includes(operator)) {
                     return true
                 }
             })
             if(previousOp) {
-
-                if (previousOpRresult < 0 && displayValue.length > String(previousOpRresult).length) {
-                    a = previousOpRresult;
-                    b = Number(displayValue.slice(String(a).length + 1));
-                    let operator = displayValue.slice(String(a).length).split(b)[0];
-                    previousOpRresult = operate(operator, a ,b);
-                }
-                else {
-                    a = Number(displayValue.split(previousOp)[0]);
-                    b = Number(displayValue.split(previousOp)[1].split(currentOperator)[0]);
-                    previousOpRresult = operate(previousOp, a ,b);
-                }
-
-                displayValue = previousOpRresult + currentOperator;
-                display.textContent = displayValue;
+                a = Number(displayValue.slice(0, displayValue.slice(1).indexOf(previousOp) + 1));
+                b = Number(displayValue.slice(String(a).length + 1))
+                previousOpRresult = Math.round(operate(previousOp, a, b));
+                previousOpRresult === "Error" ? displayValue = previousOpRresult : displayValue = previousOpRresult + currentOperator;
             }
             else {
                 displayValue += currentOperator;
-                display.textContent = displayValue;
-            }            
+            }
+            display.textContent = displayValue;             
         }  
     }
 }
@@ -83,39 +75,23 @@ function populateDisplay(calcButton) {
 //operate when equal button is clicked
 equalButton.addEventListener('click', function (){
     let operator = operators.find( (operator) => {
-        if (displayValue.includes(operator)) {
+        if (displayValue.slice(1).includes(operator)) {
             return true
         }
     })
 
-    if(operator && (displayValue.indexOf(operator) > 0) && displayValue.split(operator)[1]) {
-        a = Number(displayValue.split(operator)[0]);
-        b = Number(displayValue.split(operator)[1]);
-        opResult = operate(operator, a, b);
+    if(operator && displayValue.slice(1).split(operator)[1]) {
+        a = Number(displayValue.slice(0, displayValue.slice(1).indexOf(operator) + 1));
+        b = Number(displayValue.slice(String(a).length + 1));
+        opResult = Math.round(operate(operator, a, b));
         displayValue = String(opResult);
         display.textContent = displayValue;
 
     }
-    // if there is a negative number on the screen
-    else if (operator && (displayValue.indexOf(operator) === 0)) {
-        let secondOperator = operators.find((operator) => {
-            if(displayValue.slice(1).includes(operator)) {
-                return true
-            }
-        })
-
-        if (secondOperator && displayValue.slice(1).split(secondOperator)[1]) {
-            a = Number(operator + displayValue.slice(1).split(secondOperator)[0]);
-            b = Number(displayValue.slice(1).split(secondOperator)[1]);
-            opResult = operate(secondOperator, a, b);
-            displayValue = String(opResult);
-            display.textContent = displayValue;
-        }
-    }
 })
 
 clearButton.addEventListener('click', function() {
-    if(String(opResult) === display.textContent) {
+    if(display.textContent === String(opResult) && display.textContent === "Error" ) {
         displayValue = undefined;
         opResult = undefined;
         a = undefined;
@@ -153,7 +129,9 @@ function multiply (a,b) {
 }
 
 function divide (a,b) {
-    return a / b
+    let result;
+    b === 0 ? result = "Error" : result = a / b;
+    return result
 }
 
 function operate (operator, a, b) {
