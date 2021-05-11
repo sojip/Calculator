@@ -60,7 +60,7 @@ function populateDisplay(calcButton) {
             if(previousOp) {
                 a = Number(displayValue.slice(0, displayValue.slice(1).indexOf(previousOp) + 1));
                 b = Number(displayValue.slice(String(a).length + 1))
-                previousOpRresult = Math.round(operate(previousOp, a, b));
+                operate(previousOp, a, b) === "Error" ? previousOpRresult = operate(previousOp,a, b) : previousOpRresult =  Math.round(operate(previousOp, a, b));
                 previousOpRresult === "Error" ? displayValue = previousOpRresult : displayValue = previousOpRresult + currentOperator;
             }
             else {
@@ -83,7 +83,7 @@ equalButton.addEventListener('click', function (){
     if(operator && displayValue.slice(1).split(operator)[1]) {
         a = Number(displayValue.slice(0, displayValue.slice(1).indexOf(operator) + 1));
         b = Number(displayValue.slice(String(a).length + 1));
-        opResult = Math.round(operate(operator, a, b));
+        operate(operator, a, b) === "Error" ? opResult = operate(operator,a, b) : opResult =  Math.round(operate(operator, a, b));
         displayValue = String(opResult);
         display.textContent = displayValue;
 
