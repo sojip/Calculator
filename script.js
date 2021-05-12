@@ -4,7 +4,7 @@ let a;
 let b;
 let previousOpRresult;
 let display = document.querySelector(".screen");
-let calcButtons = document.querySelectorAll(".calcButton");
+let calcButtons = Array.from(document.querySelectorAll(".calcButton"));
 let equalButton = document.querySelector("#equal");
 let acButton = document.querySelector("#ac");
 let clearButton = document.querySelector("#clear");
@@ -12,24 +12,15 @@ let operators = ["+", "-", "/", "*"];
 
 function endTransition(e) {
     if (e.propertyName === 'transform') {
-        this.classList.remove('clicked')
+        e.target.classList.remove('clicked');
     }
+    return
 }
 
-//make calcButtons grow when clicked
-calcButtons.forEach( (calcButton) => {
-    calcButton.addEventListener( 'click', function(e) {
-        calcButton.classList.add('clicked');
-        populateDisplay(calcButton)
-    })
-})
-
-calcButtons.forEach( (calcButton) => {
-    calcButton.addEventListener('transitionend', endTransition)
-})
-
 //populate the display when a button is clicked
-function populateDisplay(calcButton) {
+function populateDisplay(e) {
+    let calcButton = e.target;
+    calcButton.classList.add('clicked');
     if(calcButton.hasAttribute("data-num")) {
         let num = calcButton.dataset.num;
         //if there is an operation Result on the screen and the user press a number or if there is error
@@ -59,8 +50,8 @@ function populateDisplay(calcButton) {
             })
             if(previousOp) {
                 a = Number(displayValue.slice(0, displayValue.slice(1).indexOf(previousOp) + 1));
-                b = Number(displayValue.slice(String(a).length + 1))
-                operate(previousOp, a, b) === "Error" ? previousOpRresult = operate(previousOp,a, b) : previousOpRresult =  Math.round(operate(previousOp, a, b));
+                b = Number(displayValue.slice(String(a).length + 1));
+                (operate(previousOp, a, b) === "Error" ||  isNaN(operate(previousOp, a, b))) ? previousOpRresult = "Error" : previousOpRresult =  Math.round(operate(previousOp, a, b));
                 previousOpRresult === "Error" ? displayValue = previousOpRresult : displayValue = previousOpRresult + currentOperator;
             }
             else {
@@ -70,6 +61,10 @@ function populateDisplay(calcButton) {
         }  
     }
 }
+
+
+calcButtons.forEach(calcButton => calcButton.addEventListener('transitionend', endTransition));
+calcButtons.forEach(calcButton => calcButton.addEventListener( 'click', populateDisplay));
 
 
 //operate when equal button is clicked
@@ -83,7 +78,7 @@ equalButton.addEventListener('click', function (){
     if(operator && displayValue.slice(1).split(operator)[1]) {
         a = Number(displayValue.slice(0, displayValue.slice(1).indexOf(operator) + 1));
         b = Number(displayValue.slice(String(a).length + 1));
-        operate(operator, a, b) === "Error" ? opResult = operate(operator,a, b) : opResult =  Math.round(operate(operator, a, b));
+        (operate(operator, a, b) === "Error" || isNaN(operate(operator, a, b))) ? opResult = "Error" : opResult =  Math.round(operate(operator, a, b));
         displayValue = String(opResult);
         display.textContent = displayValue;
 
@@ -91,7 +86,7 @@ equalButton.addEventListener('click', function (){
 })
 
 clearButton.addEventListener('click', function() {
-    if(display.textContent === String(opResult) && display.textContent === "Error" ) {
+    if(display.textContent === String(opResult) || display.textContent === "Error" ) {
         displayValue = undefined;
         opResult = undefined;
         a = undefined;
